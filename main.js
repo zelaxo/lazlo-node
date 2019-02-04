@@ -23,3 +23,9 @@ module.exports.fetchAll = fetchAll;
 
 const fetch = require('./mainfn').fetch;
 module.exports.fetch = fetch;
+
+const update = require('./mainfn').update;
+module.exports.update = update;
+
+const remove = require('./mainfn').remove;
+module.exports.remove = remove;

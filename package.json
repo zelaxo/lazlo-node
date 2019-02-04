@@ -1,6 +1,6 @@
 {
   "name": "lazlo-node",
-  "version": "0.0.1",
+  "version": "0.5.0",
   "description": "Node library for lazlodb",
   "main": "main.js",
   "scripts": {

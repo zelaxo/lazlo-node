@@ -1,5 +1,6 @@
 const fs = require('fs');
 const mkdir = require('mkdirp');
+const lodash = require('lodash');
 const msgpack = require('msgpack-lite');
 const cfn = require('./cfn');
 
@@ -239,3 +240,143 @@ function fetch(key,val,op,callback) {
     }    
 }
 module.exports.fetch = fetch;
+
+function update(ipar,ivalue,par,value,callback) {
+    let p = `${process.env.SOURCE}/${process.env.CURDB}/${process.env.CURDOC}.laz`;
+    let output = [];
+    let error;
+    if (process.env.CURDB !== null && fs.existsSync(p)) {
+        if (dbcache.length !== 0) {
+            //fast updation using cache
+            dbcache.forEach((obj) => {
+                if(obj[ipar] === ivalue) {
+                    obj[par] = value;
+                    output.push(obj);
+                    // cfn.docUpdateLog(obj._id,docname);
+                }
+            });
+            let buffer = msgpack.encode(dbcache);
+            fs.writeFile(p, buffer, (err) => {
+                if (err) throw err;
+            });
+            if(output.length === 0) {
+                error = 'No record with matching key-value pair found !';
+                if(callback)
+                    callback(error,null);
+            }
+            else {
+                if(callback)
+                    callback(null,output);
+            }
+        } else {
+            //normal updation
+            if (fs.statSync(p).size !== 0) {
+                fs.readFile(p, (err, data) => {
+                    if (err) {
+                        error = 'Data seems to be corrupted !';
+                        if (callback)
+                            callback(error,null);
+                    } else {
+                        dbcache = msgpack.decode(data);
+                        dbcache.forEach((obj) => {
+                            if(obj[ipar] === ivalue) {
+                                obj[par] = value;
+                                output.push(obj);
+                                // cfn.docUpdateLog(obj._id,docname);
+                            }
+                        });
+                        let buffer = msgpack.encode(dbcache);
+                        fs.writeFile(p, buffer, (err) => {
+                            if (err) throw err;
+                        });
+                        if(output.length === 0) {
+                            error = 'No record with matching key-value pair found !';
+                            if(callback)
+                                callback(error,null);
+                        }
+                        else {
+                            if(callback)
+                                callback(null,output);
+                        }
+                    }
+                });
+            } else {
+                error = 'Document is empty !';
+                if (callback)
+                    callback(error,null);
+            }
+        }
+    } else {
+        error = 'Database or document not accessible !';
+        if (callback)
+            callback(error,null);
+    }        
+}
+module.exports.update = update;
+
+function remove(par,value,callback) {
+    let p = `${process.env.SOURCE}/${process.env.CURDB}/${process.env.CURDOC}.laz`;
+    let output = [];
+    let error;
+    if (process.env.CURDB !== null && fs.existsSync(p)) {
+        if (dbcache.length !== 0) {
+            //fast deletion using cache
+            output = lodash.remove(dbcache, (obj) => {
+                return obj[par] === value;
+            });
+            if(output.length === 0) {
+                error = 'No record with matching key-value pair found !';
+                if(callback)
+                    callback(error,null)
+            }
+            else {
+                let buffer = msgpack.encode(dbcache);
+                fs.writeFile(p, buffer, (err) => {
+                    if (err) throw err;
+                });
+                if(callback)
+                    callback(null,output)
+                // cfn.docEntryLog(output.length,docname,false);
+            }
+        } else {
+            //normal deletion
+            if (fs.statSync(p).size !== 0) {
+                fs.readFile(p, (err, data) => {
+                    if (err) {
+                        error = 'Data seems to be corrupted !';
+                        if (callback)
+                            callback(error,null);
+                    } else {
+                        dbcache = msgpack.decode(data);
+                        output = lodash.remove(dbcache, (obj) => {
+                            return obj[par] === value;
+                        });
+                        if(output.length === 0) {
+                            error = 'No record with matching key-value pair found !';
+                            if(callback)
+                                callback(error,null)
+                        }
+                        else {
+                            let buffer = msgpack.encode(dbcache);
+                            fs.writeFile(p, buffer, (err) => {
+                                if (err) throw err;
+                            });
+                            if(callback)
+                                callback(null,output)
+                            // cfn.docEntryLog(output.length,docname,false);
+                        }
+                    }
+                });
+            } else {
+                error = 'Document is empty !';
+                if (callback)
+                    callback(error,null);
+            }
+        }
+    } else {
+        error = 'Database or document not accessible !';
+        if (callback)
+            callback(error,null);
+    }
+}
+module.exports.remove = remove;
