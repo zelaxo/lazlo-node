@@ -176,7 +176,7 @@ function fetchAll(callback) {
     }
 module.exports.fetchAll = fetchAll;
 
-function fetch(key,val,op,callback) {
+function fetch(key,val,op='eq',callback) {
     let p = `${process.env.SOURCE}/${process.env.CURDB}/${process.env.CURDOC}.laz`;
     let output;
     let error;
