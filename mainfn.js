@@ -249,7 +249,7 @@ function update(ipar,ivalue,par,value,callback) {
         if (dbcache.length !== 0) {
             //fast updation using cache
             dbcache.forEach((obj) => {
-                if(obj[ipar] === ivalue) {
+                if(obj[ipar] == ivalue) {
                     obj[par] = value;
                     output.push(obj);
                     // cfn.docUpdateLog(obj._id,docname);
@@ -279,7 +279,7 @@ function update(ipar,ivalue,par,value,callback) {
                     } else {
                         dbcache = msgpack.decode(data);
                         dbcache.forEach((obj) => {
-                            if(obj[ipar] === ivalue) {
+                            if(obj[ipar] == ivalue) {
                                 obj[par] = value;
                                 output.push(obj);
                                 // cfn.docUpdateLog(obj._id,docname);
@@ -322,7 +322,7 @@ function remove(par,value,callback) {
         if (dbcache.length !== 0) {
             //fast deletion using cache
             output = lodash.remove(dbcache, (obj) => {
-                return obj[par] === value;
+                return obj[par] == value;
             });
             if(output.length === 0) {
                 error = 'No record with matching key-value pair found !';
@@ -349,7 +349,7 @@ function remove(par,value,callback) {
                     } else {
                         dbcache = msgpack.decode(data);
                         output = lodash.remove(dbcache, (obj) => {
-                            return obj[par] === value;
+                            return obj[par] == value;
                         });
                         if(output.length === 0) {
                             error = 'No record with matching key-value pair found !';
